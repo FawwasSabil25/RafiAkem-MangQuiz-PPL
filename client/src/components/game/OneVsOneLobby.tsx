@@ -39,6 +39,7 @@ import {
     GeminiService,
     GeminiQuestionRequest,
 } from "../../lib/services/geminiService";
+import { VSStartupAnimation } from "./VSStartupAnimation";
 
 interface Player {
     id: string;
@@ -105,6 +106,12 @@ export function OneVsOneLobby() {
     const [isGeneratingAI, setIsGeneratingAI] = useState(false);
     const [aiError, setAiError] = useState<string | null>(null);
     const [aiSuccess, setAiSuccess] = useState(false);
+    const [indonesiaMode, setIndonesiaMode] = useState(false);
+
+    // VS Animation State
+    const [showVSAnimation, setShowVSAnimation] = useState(false);
+    const [vsCountdown, setVsCountdown] = useState(3);
+    const [vsPlayers, setVsPlayers] = useState<Player[]>([]);
 
     // Initialize WebSocket message handler
     useEffect(() => {
@@ -198,6 +205,16 @@ export function OneVsOneLobby() {
                 }
                 break;
 
+            case "countdown_started":
+                setVsPlayers(data.players);
+                setVsCountdown(data.countdown);
+                setShowVSAnimation(true);
+                break;
+
+            case "countdown_tick":
+                setVsCountdown(data.countdown);
+                break;
+
             case "game_started":
                 setCountdown(null);
                 if (!currentPlayer) {
@@ -207,16 +224,20 @@ export function OneVsOneLobby() {
                     }
                 }
 
-                navigate("/multiplayer-game", {
-                    state: {
-                        isMultiplayer: true,
-                        is1v1: true,
-                        settings: data.settings,
-                        players: data.players,
-                        roomId: currentRoom?.id,
-                        playerId: localStorage.getItem("quizRushPlayerId"),
-                    },
-                });
+                // Small delay to show "GO!" before navigating
+                setTimeout(() => {
+                    setShowVSAnimation(false);
+                    navigate("/multiplayer-game", {
+                        state: {
+                            isMultiplayer: true,
+                            is1v1: true,
+                            settings: data.settings,
+                            players: data.players,
+                            roomId: currentRoom?.id,
+                            playerId: localStorage.getItem("quizRushPlayerId"),
+                        },
+                    });
+                }, 500);
                 break;
 
             case "chat_message":
@@ -402,10 +423,11 @@ export function OneVsOneLobby() {
         setAiSuccess(false);
         try {
             const request: GeminiQuestionRequest = {
-                category: aiCategory,
+                category: indonesiaMode ? "Indonesia" : aiCategory,
                 difficulty: aiDifficulty,
                 count: aiQuestionCount,
                 topic: aiCustomTopic.trim() || undefined,
+                indonesiaMode,
             };
             const questions = await GeminiService.generateQuestions(request);
             setAiQuestions(questions);
@@ -421,10 +443,25 @@ export function OneVsOneLobby() {
     // Get opponent
     const opponent = players.find((p) => p.id !== currentPlayer?.id);
 
+    // Get player objects for VS animation
+    const vsPlayer1 = vsPlayers.find(p => p.isHost) || vsPlayers[0] || null;
+    const vsPlayer2 = vsPlayers.find(p => !p.isHost) || vsPlayers[1] || null;
+
     if (currentRoom) {
         // In-Room View (1v1 Battle Lobby)
         return (
             <div className="min-h-screen bg-slate-950 text-white p-6 relative overflow-hidden">
+                {/* VS Startup Animation */}
+                <AnimatePresence>
+                    {showVSAnimation && (
+                        <VSStartupAnimation
+                            player1={vsPlayer1}
+                            player2={vsPlayer2}
+                            countdown={vsCountdown}
+                        />
+                    )}
+                </AnimatePresence>
+
                 {/* Background Effects */}
                 <div className="absolute inset-0 pointer-events-none">
                     <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-red-500/5 rounded-full blur-[120px]" />
@@ -586,11 +623,37 @@ export function OneVsOneLobby() {
                             <h3 className="text-sm font-medium text-slate-500 uppercase tracking-widest mb-6 px-1">Game Settings</h3>
                             <Card className="bg-slate-900/50 border-white/5">
                                 <CardContent className="p-6 space-y-6">
+                                    {/* Indonesia Mode Toggle */}
+                                    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-red-500/10 to-white/5 border border-red-500/20 rounded-lg">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-2xl">🇮🇩</span>
+                                            <div>
+                                                <label className="text-sm font-medium text-white">Indonesia Mode</label>
+                                                <p className="text-xs text-slate-400">Questions about Indonesia in Bahasa Indonesia</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            role="switch"
+                                            aria-checked={indonesiaMode}
+                                            onClick={() => setIndonesiaMode(!indonesiaMode)}
+                                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-slate-900 ${
+                                                indonesiaMode ? 'bg-red-500' : 'bg-slate-600'
+                                            }`}
+                                        >
+                                            <span
+                                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                                    indonesiaMode ? 'translate-x-5' : 'translate-x-0'
+                                                }`}
+                                            />
+                                        </button>
+                                    </div>
+
                                     <div className="grid md:grid-cols-4 gap-4 items-end">
                                         <div className="space-y-2">
                                             <label className="text-xs text-slate-400">Topic</label>
-                                            <Select value={aiCategory} onValueChange={setAiCategory}>
-                                                <SelectTrigger className="bg-slate-900 border-slate-800 text-slate-200 h-11 focus:ring-0">
+                                            <Select value={aiCategory} onValueChange={setAiCategory} disabled={indonesiaMode}>
+                                                <SelectTrigger className={`bg-slate-900 border-slate-800 text-slate-200 h-11 focus:ring-0 ${indonesiaMode ? "opacity-50" : ""}`}>
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent className="bg-slate-950 border-slate-800">
