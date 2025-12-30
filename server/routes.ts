@@ -14,7 +14,7 @@ interface Player {
 }
 
 // Add game state to GameRoom
-type GamePhase = "waiting" | "starting" | "playing" | "final" | "reveal";
+type GamePhase = "waiting" | "countdown" | "starting" | "playing" | "final" | "reveal";
 interface GameState {
   questions: {
     question: string;
@@ -52,13 +52,17 @@ interface GameRoom {
 type GameRoomWithTimers = GameRoom & {
   questionTimer?: NodeJS.Timeout;
   revealTimer?: NodeJS.Timeout;
+  countdownTimer?: NodeJS.Timeout;
   timeLeft?: number;
   revealTimeLeft?: number;
+  countdownLeft?: number;
 };
 
 // Helper to get timer duration
 const QUESTION_TIME = 20; // seconds
 const REVEAL_TIME = 2; // seconds
+const PRESSURE_TIME = 5; // seconds - timer drops to this when opponent answers
+const COUNTDOWN_TIME = 3; // seconds - pre-battle countdown
 
 const rooms = new Map<string, GameRoomWithTimers>();
 const playerToRoom = new Map<string, string>();
@@ -368,6 +372,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (room.players.length === 0) {
           clearQuestionTimer(room);
           clearRevealTimer(room);
+          clearCountdownTimer(room);
           rooms.delete(room.id);
         } else {
           // Notify remaining players
@@ -489,7 +494,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
 
-      room.status = "playing";
+      room.status = "starting";
 
       // Initialize game state
       room.gameState = {
@@ -497,13 +502,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         questionIndex: 0,
         answers: {},
         scores: Object.fromEntries(room.players.map((p) => [p.id, 0])),
-        phase: "playing",
+        phase: "starting",
       };
 
-      // Send game_started message to all players
+      // Start pre-battle countdown
+      startCountdown(room);
+    }
+
+    function startCountdown(room: GameRoomWithTimers) {
+      clearCountdownTimer(room);
+      room.countdownLeft = COUNTDOWN_TIME;
+
+      // Notify all players that countdown has started
       broadcastToRoom(room, {
-        type: "game_started",
-        settings: room.settings,
+        type: "countdown_started",
+        countdown: room.countdownLeft,
         players: room.players.map((p) => ({
           id: p.id,
           name: p.name,
@@ -513,9 +526,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })),
       });
 
-      // Also broadcast the initial game state
-      broadcastGameState(room);
-      startQuestionTimer(room);
+      room.countdownTimer = setInterval(() => {
+        room.countdownLeft!--;
+
+        broadcastToRoom(room, {
+          type: "countdown_tick",
+          countdown: room.countdownLeft,
+        });
+
+        if (room.countdownLeft! <= 0) {
+          clearCountdownTimer(room);
+          // Now actually start the game
+          room.status = "playing";
+          room.gameState!.phase = "playing";
+
+          // Send game_started message to all players
+          broadcastToRoom(room, {
+            type: "game_started",
+            settings: room.settings,
+            players: room.players.map((p) => ({
+              id: p.id,
+              name: p.name,
+              isHost: p.isHost,
+              isReady: p.isReady,
+              score: p.score,
+            })),
+          });
+
+          // Also broadcast the initial game state
+          broadcastGameState(room);
+          startQuestionTimer(room);
+        }
+      }, 1000);
+    }
+
+    function clearCountdownTimer(room: GameRoomWithTimers) {
+      if (room.countdownTimer) {
+        clearInterval(room.countdownTimer);
+        room.countdownTimer = undefined;
+      }
     }
 
     function handleChatMessage(
@@ -625,6 +674,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         clearQuestionTimer(room);
         revealAndScore(room);
       } else {
+        // Pressure Timer: In 1v1 mode, when first player answers, reduce opponent's timer
+        if (room.maxPlayers === 2 && totalAnswers === 1) {
+          // Broadcast player_answered to opponents
+          room.players.forEach((p) => {
+            if (p.id !== playerId && p.ws.readyState === 1) {
+              p.ws.send(JSON.stringify({
+                type: "player_answered",
+                playerId: playerId,
+                playerName: player.name,
+              }));
+            }
+          });
+
+          // Reduce timer to PRESSURE_TIME if more time remaining
+          if (room.timeLeft && room.timeLeft > PRESSURE_TIME) {
+            room.timeLeft = PRESSURE_TIME;
+          }
+        }
         broadcastGameState(room);
       }
     }

@@ -5,6 +5,7 @@ export interface GeminiQuestionRequest {
   difficulty: "easy" | "medium" | "hard";
   count: number;
   topic?: string;
+  indonesiaMode?: boolean;
 }
 
 export interface GeminiQuestion {
@@ -73,10 +74,35 @@ export class GeminiService {
   }
 
   private static buildPrompt(request: GeminiQuestionRequest): string {
-    const { category, difficulty, count, topic } = request;
+    const { category, difficulty, count, topic, indonesiaMode } = request;
 
     const topicText = topic ? ` focused on ${topic}` : "";
     const difficultyText = this.getDifficultyDescription(difficulty);
+
+    if (indonesiaMode) {
+      return `Buatkan ${count} soal trivia pilihan ganda tentang Indonesia (sejarah, budaya, geografi, politik, tokoh terkenal Indonesia)${topicText}. 
+    
+Persyaratan:
+- Tingkat kesulitan: ${difficultyText}
+- Setiap soal harus memiliki tepat 4 pilihan (A, B, C, D)
+- Hanya satu jawaban benar per soal
+- Soal harus menarik dan edukatif tentang Indonesia
+- Sertakan penjelasan singkat untuk jawaban yang benar
+- SEMUA teks harus dalam Bahasa Indonesia (soal, pilihan jawaban, dan penjelasan)
+
+Format setiap soal sebagai JSON:
+{
+  "id": "unique_id",
+  "category": "Indonesia",
+  "question": "Teks pertanyaan di sini?",
+  "options": ["Pilihan A", "Pilihan B", "Pilihan C", "Pilihan D"],
+  "correctAnswer": 0,
+  "difficulty": "${difficulty}",
+  "explanation": "Penjelasan singkat mengapa ini benar"
+}
+
+Kembalikan hanya array JSON yang valid, tanpa teks tambahan.`;
+    }
 
     return `Generate ${count} multiple choice trivia questions about ${category}${topicText}. 
     

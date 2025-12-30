@@ -31,6 +31,7 @@ export function MultiplayerTriviaGame({
   const [resolvedPlayerId, setResolvedPlayerId] = useState<string | undefined>(
     playerId
   );
+  const [pressureAlert, setPressureAlert] = useState<string | null>(null);
 
   // Always use playerId from localStorage for robust identification
   useEffect(() => {
@@ -52,15 +53,23 @@ export function MultiplayerTriviaGame({
 
       if (data.type === "game_state") {
         setMpState(data.state);
+        // Clear pressure alert when moving to new question
+        if (data.state?.phase === "playing" && !data.state?.answers?.[resolvedPlayerId || ""]) {
+          setPressureAlert(null);
+        }
       }
       if (data.type === "game_end") {
         setMpState((prev: any) => ({ ...prev, phase: "final" }));
         setTimeout(() => playSuccess(), 500);
       }
+      if (data.type === "player_answered") {
+        setPressureAlert(`${data.playerName} answered! Hurry up!`);
+        setTimeout(() => setPressureAlert(null), 3000);
+      }
     };
     ws.addEventListener("message", handleMessage);
     return () => ws.removeEventListener("message", handleMessage);
-  }, [wsRef, playSuccess]);
+  }, [wsRef, playSuccess, resolvedPlayerId]);
 
   // Send answer to server in multiplayer
   const handleAnswer = (answer: string) => {
@@ -268,6 +277,22 @@ export function MultiplayerTriviaGame({
               })}
             </AnimatePresence>
           </div>
+
+          {/* Pressure Alert */}
+          <AnimatePresence>
+            {pressureAlert && !hasAnswered && isPlayingPhase && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: -10 }}
+                className="bg-red-500/20 border-2 border-red-500 p-4 flex items-center justify-center gap-3 text-red-400 animate-pulse"
+              >
+                <Zap className="w-5 h-5 animate-bounce" />
+                <span className="font-bold text-lg uppercase tracking-wider">{pressureAlert}</span>
+                <Zap className="w-5 h-5 animate-bounce" />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Waiting / Result Message */}
           {isPlayingPhase && hasAnswered && (
