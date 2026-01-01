@@ -316,11 +316,11 @@ export function LocalTriviaGame() {
 
         {/* Right Column: Sidebar */}
         <div className="lg:col-span-3 space-y-6">
-          {/* Leaderboard */}
+          {/* Papan Skor */}
           <div className="bg-navy-900/30 border border-white/10 p-6">
             <div className="flex items-center gap-2 mb-6 pb-4 border-b border-white/5">
               <Trophy className="w-4 h-4 text-gold-400" />
-              <h3 className="font-bold text-sm tracking-wider">LEADERBOARD</h3>
+              <h3 className="font-bold text-sm tracking-wider">PAPAN SKOR</h3>
             </div>
             <div className="space-y-3">
               {[...players].sort((a, b) => b.score - a.score).map((p, i) => (

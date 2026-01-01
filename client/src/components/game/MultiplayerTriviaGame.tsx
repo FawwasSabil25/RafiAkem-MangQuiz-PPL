@@ -325,7 +325,7 @@ export function MultiplayerTriviaGame({
 
         {/* Right Column: Sidebar */}
         <div className="lg:col-span-3 space-y-6">
-          {/* Leaderboard */}
+          {/* Papan Skor */}
           <div className="bg-navy-900/30 border border-white/10 p-6">
             <div className="flex items-center gap-2 mb-6 pb-4 border-b border-white/5">
               <Trophy className="w-4 h-4 text-gold-400" />

@@ -14,21 +14,22 @@ import { OneVsOneLobby } from "./components/game/OneVsOneLobby";
 import { CustomQuestionsSetup } from "./components/game/CustomQuestionsSetup";
 import { useTriviaGame } from "./lib/stores/useTriviaGame";
 import { useAudio } from "./lib/stores/useAudio";
-import { Button } from "./components/ui/button";
-import { Volume2, VolumeX } from "lucide-react";
 import { IntroScreen } from "./components/game/IntroScreen";
 import { Toaster } from "./components/ui/sonner";
 import { MultiplayerTriviaGame } from "./components/game/MultiplayerTriviaGame";
 import { WebSocketProvider } from "./lib/contexts/WebSocketContext";
 import { ModeSelect } from "./components/game/ModeSelect";
 
+function IntroScreenWrapper() {
+  const navigate = useNavigate();
+  return <IntroScreen onStart={() => navigate('/mode')} />;
+}
+
 
 
 
 function AppContent() {
   const {
-    isMuted,
-    toggleMute,
     setBackgroundMusic,
     setHitSound,
     setSuccessSound,
@@ -43,9 +44,11 @@ function AppContent() {
         bgMusic.loop = true;
         bgMusic.volume = 0.3;
         setBackgroundMusic(bgMusic);
+        
         const hitSound = new Audio("/sounds/hit.mp3");
         hitSound.volume = 0.5;
         setHitSound(hitSound);
+        
         const successSound = new Audio("/sounds/success.mp3");
         successSound.volume = 0.6;
         setSuccessSound(successSound);
@@ -58,27 +61,10 @@ function AppContent() {
 
   return (
     <div className="relative min-h-screen">
-      {/* Audio Control */}
-      <div className="fixed top-4 right-4 z-50">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={toggleMute}
-          className="bg-white shadow-lg"
-        >
-          {isMuted ? (
-            <VolumeX className="h-4 w-4 text-gray-600" />
-          ) : (
-            <Volume2 className="h-4 w-4 text-blue-600" />
-          )}
-        </Button>
-      </div>
       <Routes>
         <Route
           path="/"
-          element={
-            <IntroScreen onStart={() => window.location.href = "/mode"} />
-          }
+          element={<IntroScreenWrapper />}
         />
         <Route path="/mode" element={<ModeSelect />} />
         <Route path="/mode/local" element={<GameLobby />} />

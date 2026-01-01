@@ -15,7 +15,7 @@ export function ScoreBoard() {
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-white flex items-center">
             <Trophy className="w-5 h-5 mr-2 text-yellow-400" />
-            Leaderboard
+            Papan Skor
           </h3>
           <Badge variant="outline" className="border-blue-400 text-blue-300">
             Live

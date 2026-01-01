@@ -49,34 +49,42 @@ export function Question() {
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "easy":
-        return "bg-green-500";
+        return "bg-emerald-500";
       case "medium":
-        return "bg-yellow-500";
+        return "bg-amber-500";
       case "hard":
         return "bg-red-500";
       default:
-        return "bg-gray-500";
+        return "bg-slate-500";
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 relative overflow-hidden">
+    <div className="min-h-screen bg-navy-950 relative overflow-hidden">
+      {/* Dither Noise Overlay */}
+      <div className="fixed inset-0 dither-noise z-10 pointer-events-none mix-blend-overlay opacity-20" />
+      
+      {/* Background Grid */}
+      <div className="fixed inset-0 bg-[url('/grid.svg')] opacity-[0.03] pointer-events-none" />
+      
       {/* Animated background */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse delay-1000"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gold-500/10 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-navy-800/20 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse delay-1000"></div>
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 py-6">
+      <div className="relative z-20 container mx-auto px-4 py-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
-            <Brain className="w-8 h-8 text-purple-400" />
+            <div className="w-10 h-10 bg-gold-500 flex items-center justify-center rounded-lg">
+              <Brain className="w-6 h-6 text-navy-950" />
+            </div>
             <div>
               <h1 className="text-2xl font-bold text-white">
                 History Trivia Challenge
               </h1>
-              <p className="text-purple-200 text-sm">
+              <p className="text-slate-400 text-sm">
                 Question {currentQuestionIndex + 1} of {questions.length}
               </p>
             </div>
@@ -88,7 +96,7 @@ export function Question() {
               <Badge
                 className={`${getDifficultyColor(
                   currentQuestion.difficulty
-                )} text-white px-3 py-1`}
+                )} text-white px-3 py-1 font-medium`}
               >
                 {currentQuestion.difficulty.toUpperCase()}
               </Badge>
@@ -98,18 +106,18 @@ export function Question() {
 
         <div className="max-w-6xl mx-auto">
           {/* Question Card */}
-          <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-2xl mb-8">
+          <Card className="bg-navy-900/50 backdrop-blur-md border-white/10 shadow-2xl mb-8">
             <CardContent className="p-8">
               <div className="flex items-center justify-between mb-6">
                 <Badge
                   variant="outline"
-                  className="border-purple-400 text-purple-300 bg-purple-400/10"
+                  className="border-gold-500/50 text-gold-400 bg-gold-500/10 font-medium"
                 >
                   {currentQuestion.category}
                 </Badge>
-                <div className="flex items-center space-x-2 text-white">
+                <div className="flex items-center space-x-2 text-slate-300">
                   <Clock className="w-4 h-4" />
-                  <span className="text-sm">
+                  <span className="text-sm font-medium">
                     Question {currentQuestionIndex + 1} of {questions.length}
                   </span>
                 </div>
@@ -121,10 +129,12 @@ export function Question() {
 
               {/* Progress Bar */}
               <div className="mb-8">
-                <Progress
-                  value={((currentQuestionIndex + 1) / questions.length) * 100}
-                  className="h-2 bg-white/20"
-                />
+                <div className="w-full bg-navy-800/50 rounded-full h-2">
+                  <div 
+                    className="bg-gradient-to-r from-gold-500 to-gold-400 h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
+                  />
+                </div>
               </div>
 
               {/* Answer Options */}
@@ -152,21 +162,21 @@ export function Question() {
                         className={`cursor-pointer transition-all duration-300 ${
                           showAnswer
                             ? isCorrect
-                              ? "bg-green-500/20 border-green-400 shadow-green-400/50"
+                              ? "bg-emerald-500/20 border-emerald-400 shadow-emerald-400/30"
                               : playersWhoSelected.length > 0
-                              ? "bg-red-500/20 border-red-400"
-                              : "bg-white/5 border-white/20"
-                            : "bg-white/10 hover:bg-white/20 border-white/30 hover:border-white/50"
+                              ? "bg-red-500/20 border-red-400 shadow-red-400/20"
+                              : "bg-navy-800/30 border-white/10"
+                            : "bg-navy-800/50 hover:bg-navy-800/70 border-white/20 hover:border-gold-500/50 hover:shadow-gold-500/10"
                         } shadow-xl hover:shadow-2xl`}
                       >
                         <CardContent className="p-6">
                           <div className="flex items-center justify-between mb-4">
-                            <span className="text-lg font-semibold text-white group-hover:text-purple-200">
+                            <span className="text-lg font-semibold text-white group-hover:text-gold-200 transition-colors">
                               {option}
                             </span>
 
                             {showAnswer && isCorrect && (
-                              <CheckCircle className="w-6 h-6 text-green-400" />
+                              <CheckCircle className="w-6 h-6 text-emerald-400" />
                             )}
                             {showAnswer &&
                               !isCorrect &&
@@ -182,12 +192,12 @@ export function Question() {
                                 <Badge
                                   key={player.id}
                                   variant="secondary"
-                                  className={`text-xs ${
+                                  className={`text-xs font-medium ${
                                     showAnswer && isCorrect
-                                      ? "bg-green-600 text-white"
+                                      ? "bg-emerald-600 text-white border-emerald-500"
                                       : showAnswer
-                                      ? "bg-red-600 text-white"
-                                      : "text-white"
+                                      ? "bg-red-600 text-white border-red-500"
+                                      : "bg-navy-800 text-white border-white/20"
                                   }`}
                                   style={{
                                     backgroundColor: !showAnswer
@@ -231,10 +241,10 @@ export function Question() {
                                       handleAnswerSelect(player.id, index)
                                     }
                                     disabled={hasAnswered}
-                                    className={`text-xs transition-all duration-200 ${
+                                    className={`text-xs transition-all duration-200 font-medium ${
                                       selectedThis
-                                        ? "shadow-lg transform scale-105"
-                                        : "border-white/30 text-white hover:bg-white/10"
+                                        ? "shadow-lg transform scale-105 border-gold-500"
+                                        : "border-white/30 text-white hover:bg-navy-700/50 hover:border-gold-500/50"
                                     }`}
                                     style={{
                                       backgroundColor: selectedThis
@@ -269,8 +279,9 @@ export function Question() {
                 <div className="text-center mt-8">
                   <Button
                     onClick={handleShowAnswer}
+                    variant="gold"
                     size="lg"
-                    className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500 text-white font-semibold px-8 shadow-xl"
+                    className="shadow-xl hover:shadow-gold-500/20 transition-all duration-200"
                   >
                     <Clock className="w-5 h-5 mr-2" />
                     Show Answer
@@ -282,22 +293,22 @@ export function Question() {
 
           {/* Explanation and Controls */}
           {showAnswer && (
-            <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-2xl">
+            <Card className="bg-navy-900/50 backdrop-blur-md border-white/10 shadow-2xl">
               <CardContent className="p-8">
                 <div className="space-y-6">
                   <div className="flex items-center gap-3 text-white">
-                    <CheckCircle className="h-6 w-6 text-green-400 flex-shrink-0" />
+                    <CheckCircle className="h-6 w-6 text-emerald-400 flex-shrink-0" />
                     <span className="font-semibold text-lg">
                       Correct Answer:
                     </span>
-                    <span className="text-green-300 font-medium">
+                    <span className="text-emerald-300 font-medium">
                       {currentQuestion.options[currentQuestion.correctAnswer]}
                     </span>
                   </div>
 
                   {currentQuestion.explanation && (
-                    <div className="bg-blue-500/10 border border-blue-400/30 p-6 rounded-lg">
-                      <p className="text-blue-100 leading-relaxed">
+                    <div className="bg-navy-800/30 border border-gold-500/20 p-6 rounded-lg">
+                      <p className="text-slate-200 leading-relaxed">
                         {currentQuestion.explanation}
                       </p>
                     </div>
@@ -306,8 +317,9 @@ export function Question() {
                   <div className="text-center">
                     <Button
                       onClick={handleNextQuestion}
-                      size="lg"
-                      className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold py-4 px-8 text-lg shadow-2xl transform transition-all duration-200 hover:scale-105"
+                      variant="premium"
+                      size="xl"
+                      className="transform transition-all duration-200 hover:scale-105"
                     >
                       {currentQuestionIndex < questions.length - 1 ? (
                         <>

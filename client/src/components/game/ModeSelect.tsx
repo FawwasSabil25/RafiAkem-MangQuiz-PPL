@@ -2,52 +2,76 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Globe, ArrowRight, Gamepad2, ArrowLeft, Swords } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AudioControl } from "@/components/ui/audio-control";
 
 export function ModeSelect() {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        <div className="min-h-screen bg-navy-950 relative overflow-hidden">
+            {/* Dither Noise Overlay */}
+            <div className="fixed inset-0 dither-noise z-10 pointer-events-none mix-blend-overlay opacity-20" />
+            
+            {/* Background Grid */}
+            <div className="fixed inset-0 bg-[url('/grid.svg')] opacity-[0.03] pointer-events-none" />
+            
             {/* Background Effects */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-gold-500/5 rounded-full blur-[120px]" />
-                <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-slate-500/5 rounded-full blur-[120px]" />
-                <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.02]" />
+                <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-navy-800/10 rounded-full blur-[120px]" />
             </div>
 
-            {/* Back Button */}
-            <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="absolute top-8 left-8 z-20"
-            >
-                <Button
-                    variant="ghost"
-                    onClick={() => navigate("/")}
-                    className="text-slate-400 hover:text-white hover:bg-white/5 gap-2"
+            {/* Navigation */}
+            <nav className="relative z-40 border-b border-white/5 bg-navy-950/90 backdrop-blur-xl">
+                <div className="container mx-auto px-6 lg:px-8">
+                    <div className="flex items-center justify-between h-16">
+                        {/* Logo */}
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-gold-500 to-gold-400 rounded-lg flex items-center justify-center font-bold text-navy-950 text-xl shadow-lg">
+                                M
+                            </div>
+                            <span className="font-bold text-xl tracking-tight text-white">MangQuiz</span>
+                        </div>
+                        
+                        {/* Back Button */}
+                        <div className="flex items-center gap-2">
+                            <AudioControl 
+                                variant="navbar" 
+                                responsive={true}
+                                className="relative"
+                            />
+                            <Button
+                                variant="navy-ghost"
+                                onClick={() => navigate("/")}
+                                className="gap-2"
+                            >
+                                <ArrowLeft className="w-4 h-4" />
+                                <span className="hidden sm:inline">Back</span>
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            {/* Content */}
+            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] p-6 relative z-20">
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                    className="text-center mb-16"
                 >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to Intro
-                </Button>
-            </motion.div>
+                    <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
+                        Choose Your <span className="gradient-text">Path</span>
+                    </h2>
+                    <p className="text-slate-400 text-lg max-w-lg mx-auto">
+                        Select how you want to play. Challenge friends locally or compete globally.
+                    </p>
+                </motion.div>
 
-            <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="text-center mb-16 relative z-10"
-            >
-                <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
-                    Choose Your <span className="text-gold-400">Path</span>
-                </h2>
-                <p className="text-slate-400 text-lg max-w-lg mx-auto">
-                    Select how you want to play. Challenge friends locally or compete globally.
-                </p>
-            </motion.div>
-
-            <div className="grid md:grid-cols-3 gap-6 max-w-5xl w-full relative z-10">
-                {/* 1v1 Battle Mode Card */}
-                <ModeCard
+                <div className="grid md:grid-cols-3 gap-6 max-w-5xl w-full">
+                    {/* 1v1 Battle Mode Card */}
+                    <ModeCard
                     title="1v1 Battle"
                     description="Challenge a friend to a head-to-head trivia duel. May the smartest win!"
                     icon={<Swords className="w-10 h-10 text-red-400" />}
@@ -75,6 +99,7 @@ export function ModeSelect() {
                     onClick={() => navigate("/mode/multiplayer")}
                     delay={0.4}
                 />
+                </div>
             </div>
         </div>
     );
