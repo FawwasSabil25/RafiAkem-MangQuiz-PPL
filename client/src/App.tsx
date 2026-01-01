@@ -1,18 +1,17 @@
+import { useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
-  useNavigate,
   Navigate,
   useLocation,
+  useNavigate,
 } from "react-router-dom";
-import { useEffect } from "react";
 import { GameLobby } from "./components/game/GameLobby";
 import { LocalTriviaGame } from "./components/game/LocalTriviaGame";
 import { MultiplayerLobby } from "./components/game/MultiplayerLobby";
 import { OneVsOneLobby } from "./components/game/OneVsOneLobby";
 import { CustomQuestionsSetup } from "./components/game/CustomQuestionsSetup";
-import { useTriviaGame } from "./lib/stores/useTriviaGame";
 import { useAudio } from "./lib/stores/useAudio";
 import { IntroScreen } from "./components/game/IntroScreen";
 import { Toaster } from "./components/ui/sonner";
@@ -24,9 +23,6 @@ function IntroScreenWrapper() {
   const navigate = useNavigate();
   return <IntroScreen onStart={() => navigate('/mode')} />;
 }
-
-
-
 
 function AppContent() {
   const {
