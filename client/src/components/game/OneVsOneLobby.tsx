@@ -90,6 +90,7 @@ export function OneVsOneLobby() {
     const [showCreateRoom, setShowCreateRoom] = useState(false);
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
     const [newMessage, setNewMessage] = useState("");
+    const chatContainerRef = useRef<HTMLDivElement>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [joinPassword, setJoinPassword] = useState("");
 
@@ -171,6 +172,13 @@ export function OneVsOneLobby() {
         const ready = players.length >= 2 && nonHostPlayers.every((p) => p.isReady);
         setAllPlayersReady(ready);
     }, [players]);
+
+    // Auto-scroll chat to latest message
+    useEffect(() => {
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
+    }, [chatMessages]);
 
     const handleWebSocketMessage = (data: any) => {
         console.log("WebSocket message received:", data);
@@ -775,7 +783,7 @@ export function OneVsOneLobby() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-4">
-                            <div className="h-32 overflow-y-auto space-y-2 mb-3 pr-2">
+                            <div ref={chatContainerRef} className="h-32 overflow-y-auto space-y-2 mb-3 pr-2">
                                 {chatMessages.length === 0 ? (
                                     <p className="text-slate-500 text-sm text-center py-4">No messages yet. Say hi! 👋</p>
                                 ) : (
